@@ -12,12 +12,17 @@ import re
 import sys 
 sys.path.append("lib.bs4")
 
-def download_image(url, file_path):
-  r = requests.get(url, stream=True)
+label_price = []
+LIMIT_NUM = 10
 
-  if r.status_code == 200:
-    with open(file_path, "wb") as f:
-      f.write(r.content)
+def download_image(url, file_path):
+  try:
+    r = requests.get(url, stream=True)
+    if r.status_code == 200:
+      with open(file_path, "wb") as f:
+        f.write(r.content)
+  except:
+    pass
     
 import base64
 def save_base64_image(data, file_path):
@@ -35,7 +40,7 @@ def data_load(query):
   driver = webdriver.Chrome('chromedriver',options=options)
   driver.implicitly_wait(10)
 
-  url = "https://www.google.com/search?q={}&hl=ja&tbm=isch".format(query)
+  url = "https://www.google.com/search?q={}&hl=ja&tbm=shop".format(query)
 
   # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
   WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
@@ -44,18 +49,25 @@ def data_load(query):
   html = driver.page_source.encode("utf-8")
   soup = BeautifulSoup(html, "html.parser")
 
-  img_tags = soup.find_all("img",limit=10)
+  span_tags = soup.find_all("span", attrs={'class':['a8Pemb','OFFNJ']}, limit=LIMIT_NUM)
+  for span in span_tags:
+    s = ''.join(filter(str.isalnum, span.text))
+    label_price.append(int(s))
+
+  print(label_price)
+
+  div_tags = soup.find_all("div", attrs={'class':'ArOc1c'}, limit=LIMIT_NUM)
   img_urls = []
 
-  for img_tag in img_tags:
-    url = img_tag.get("src")
+  for div_tag in div_tags:
+    for img_tag in div_tag.children:
+      url = img_tag.get("src")
 
     if url is None:
       url = img_tag.get("data-src")
 
     if url is not None:
       img_urls.append(url)
-
 
   save_dir = "../data/" + str(query) + "/"
   if not os.path.exists(save_dir):
@@ -79,5 +91,3 @@ def data_load(query):
 
 if __name__ == '__main__':
   data_load('絵画')
-
-  
