@@ -9,20 +9,18 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import os
 import re
+import pickle
 import sys 
 sys.path.append("lib.bs4")
 
 label_price = []
-LIMIT_NUM = 10
+LIMIT_NUM = 100
 
 def download_image(url, file_path):
-  try:
-    r = requests.get(url, stream=True)
-    if r.status_code == 200:
-      with open(file_path, "wb") as f:
-        f.write(r.content)
-  except:
-    pass
+  r = requests.get(url, stream=True)
+  if r.status_code == 200:
+    with open(file_path, "wb") as f:
+      f.write(r.content)
     
 import base64
 def save_base64_image(data, file_path):
@@ -40,7 +38,7 @@ def data_load(query):
   driver = webdriver.Chrome('chromedriver',options=options)
   driver.implicitly_wait(10)
 
-  url = "https://www.google.com/search?q={}&hl=ja&tbm=shop".format(query)
+  url = "https://www.google.com/search?q={}&hl=ja&tbm=shop&num=1000".format(query)
 
   # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
   WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
@@ -54,12 +52,11 @@ def data_load(query):
     s = ''.join(filter(str.isalnum, span.text))
     label_price.append(int(s))
 
-  print(label_price)
-
   div_tags = soup.find_all("div", attrs={'class':'ArOc1c'}, limit=LIMIT_NUM)
   img_urls = []
 
-  for div_tag in div_tags:
+  drop_idx = []
+  for idx, div_tag in enumerate(div_tags):
     for img_tag in div_tag.children:
       url = img_tag.get("src")
 
@@ -68,6 +65,11 @@ def data_load(query):
 
     if url is not None:
       img_urls.append(url)
+    else:
+      drop_idx.append(idx)
+  
+  for tmp in reversed(drop_idx):
+    label_price.pop(tmp)
 
   save_dir = "../data/" + str(query) + "/"
   if not os.path.exists(save_dir):
@@ -87,7 +89,12 @@ def data_load(query):
     else:
       download_image(url=url, file_path=image_path)
 
+  print('label_price len:',len(label_price))
+  with open('../data/label/price.pickle', 'wb') as f:
+    pickle.dump(label_price, f)
+
   driver.quit()
+
 
 if __name__ == '__main__':
   data_load('絵画')
