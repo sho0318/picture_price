@@ -13,8 +13,8 @@ import pickle
 import sys 
 sys.path.append("lib.bs4")
 
-label_price = []
 LIMIT_NUM = 100
+SEARCH_PAGE_NUM = 3
 
 def download_image(url, file_path):
   r = requests.get(url, stream=True)
@@ -30,32 +30,26 @@ def save_base64_image(data, file_path):
   with open(file_path, "wb") as f:
       f.write(img)
 
-def data_load(query):
-  options = webdriver.ChromeOptions()
-  options.add_argument('--headless')
-  options.add_argument('--no-sandbox')
-  options.add_argument('--disable-dev-shm-usage')
-  driver = webdriver.Chrome('chromedriver',options=options)
-  driver.implicitly_wait(10)
+def search_page(driver,url):
+  img_urls = []
+  label_price = []
+  drop_idx = []
 
-  url = "https://www.google.com/search?q={}&hl=ja&tbm=shop&num=1000".format(query)
-
-  # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
+    # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
   WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
 
   driver.get(url)
   html = driver.page_source.encode("utf-8")
   soup = BeautifulSoup(html, "html.parser")
 
+  #値段取得
   span_tags = soup.find_all("span", attrs={'class':['a8Pemb','OFFNJ']}, limit=LIMIT_NUM)
   for span in span_tags:
     s = ''.join(filter(str.isalnum, span.text))
     label_price.append(int(s))
 
+  #画像取得
   div_tags = soup.find_all("div", attrs={'class':'ArOc1c'}, limit=LIMIT_NUM)
-  img_urls = []
-
-  drop_idx = []
   for idx, div_tag in enumerate(div_tags):
     for img_tag in div_tag.children:
       url = img_tag.get("src")
@@ -70,6 +64,41 @@ def data_load(query):
   
   for tmp in reversed(drop_idx):
     label_price.pop(tmp)
+
+  np_tag = soup.find("a", attrs={'id':'pnnext'})
+  try:
+    np_url = np_tag.get("href")
+  except:
+    np_url = False
+
+  return img_urls, label_price, np_url
+
+def data_load(query):
+  options = webdriver.ChromeOptions()
+  options.add_argument('--headless')
+  options.add_argument('--no-sandbox')
+  options.add_argument('--disable-dev-shm-usage')
+  driver = webdriver.Chrome('chromedriver',options=options)
+  driver.implicitly_wait(10)
+
+  img_urls = []
+  label_price = []
+  flag = True
+  url = "https://www.google.com/search?q={}&hl=ja&tbm=shop&num=100".format(query)
+
+  page_num = 0
+  while(flag):
+    page_num += 1 
+    #ページ内で検索（npタグがあったら繰り返し）
+    one_img_url, one_label_price, np_url = search_page(driver=driver,url=url)
+
+    img_urls.extend(one_img_url)
+    label_price.extend(one_label_price)
+
+    if np_url == False or page_num >= SEARCH_PAGE_NUM:
+      break
+    else:
+      url = "https://www.google.com/{}".format(np_url)
 
   save_dir = "../data/" + str(query) + "/"
   if not os.path.exists(save_dir):
@@ -94,6 +123,7 @@ def data_load(query):
     pickle.dump(label_price, f)
 
   driver.quit()
+
 
 
 if __name__ == '__main__':
