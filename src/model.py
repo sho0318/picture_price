@@ -1,7 +1,7 @@
 import os
 import pickle
 
-import cv2
+from PIL import Image 
 import numpy as np
 import pandas as pd
 
@@ -28,7 +28,7 @@ class MyDatasete(Dataset):
     
     def __getitem__(self, index):
         image_path = "../data/reshape_fig/{}.jpg".format(index)
-        image = cv2.imread(image_path)
+        image = Image.open(image_path)
 
         image = np.array(image).astype(np.float32).transpose(2,1,0)
         label = self.train_df["label"].apply(lambda x: int(x)).to_list()[index]
