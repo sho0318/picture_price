@@ -1,5 +1,4 @@
-from scraping import data_load
-from reshape_figsize import resize_fig
+from scraping import data_load, resize_fig
 import os
 
 QUERY = "絵画"
