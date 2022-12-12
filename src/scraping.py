@@ -14,7 +14,7 @@ import sys
 sys.path.append("lib.bs4")
 
 LIMIT_NUM = 100
-SEARCH_PAGE_NUM = 3
+SEARCH_PAGE_NUM = 5
 
 def download_image(url, file_path):
   r = requests.get(url, stream=True)
@@ -43,7 +43,7 @@ def search_page(driver,url):
   soup = BeautifulSoup(html, "html.parser")
 
   #値段取得
-  span_tags = soup.find_all("span", attrs={'class':['a8Pemb','OFFNJ']}, limit=LIMIT_NUM)
+  span_tags = soup.find_all("span", class_='a8Pemb OFFNJ', limit=LIMIT_NUM)
   for span in span_tags:
     s = ''.join(filter(str.isalnum, span.text))
     label_price.append(int(s))
