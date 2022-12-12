@@ -1,5 +1,16 @@
 import os
+import pandas as pd
+import pickle
 
-DIR = "../data/fig/"
-print(sum(os.path.isfile(os.path.join(DIR, name)) for name in os.listdir(DIR)))
-print(len(os.listdir(DIR)))
+with open('../data/label/price.pickle', 'rb') as f:
+    prices = pickle.load(f)
+
+DIR = "../data/fig"
+data = []
+for num in os.listdir(DIR):
+    data_num = int(num.split('.')[0])
+    data.append([f'{DIR}/{num}', num, prices[data_num]])
+
+df = pd.DataFrame(data, columns=['path', 'filename', 'label'])
+
+print(df)
