@@ -100,7 +100,7 @@ def data_load(query):
     else:
       url = "https://www.google.com/{}".format(np_url)
 
-  save_dir = "../data/" + str(query) + "/"
+  save_dir = "../data/fig/"
   if not os.path.exists(save_dir):
       os.mkdir(save_dir)
 
