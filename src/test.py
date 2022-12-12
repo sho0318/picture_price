@@ -1,16 +1,21 @@
 import os
 import pandas as pd
 import pickle
+import numpy as np
 
 with open('../data/label/price.pickle', 'rb') as f:
     prices = pickle.load(f)
 
-DIR = "../data/fig"
-data = []
-for num in os.listdir(DIR):
-    data_num = int(num.split('.')[0])
-    data.append([f'{DIR}/{num}', num, prices[data_num]])
+prices = np.array(prices)
+mean_prices = np.mean(prices)
+std_prices = max(prices) - min(prices)
 
-df = pd.DataFrame(data, columns=['path', 'filename', 'label'])
+rt = []
+for price in prices:
+    rt.append((price-mean_prices)/std_prices)
 
-print(df)
+ans = {'label':rt, 'mean_std':[mean_prices, std_prices]}
+
+with open('../data/label/price_normalize.pickle', 'wb') as f:
+    pickle.dump(ans, f)
+print(ans)

@@ -31,7 +31,7 @@ class MyDatasete(Dataset):
         image = Image.open(image_path)
 
         image = np.array(image).astype(np.float32).transpose(2,1,0)
-        label = self.train_df["label"].apply(lambda x: int(x)).to_list()[index]
+        label = self.train_df["label"].apply(lambda x: float(x)).to_list()[index]
 
         return image, label
 
@@ -46,7 +46,7 @@ class Net(nn.Module):
         self.conv2_1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
         self.conv2_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(in_features=128*800*800, out_features=128)
+        self.fc1 = nn.Linear(in_features=128*100*100, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=10)
         self.fc3 = nn.Linear(in_features=10, out_features=1)
 
@@ -59,7 +59,7 @@ class Net(nn.Module):
         x = F.relu(self.conv2_2(x))
         x = self.pool2(x)
 
-        x = x.view(-1, 128*800*800)
+        x = x.view(-1, 128*100*100)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
@@ -85,9 +85,15 @@ def train(net, optimizer, criterion, dataloaders_dict):
 
             for inputs, labels in dataloaders_dict[phase]:
                 optimizer.zero_grad()
-
                 with torch.set_grad_enabled(phase == 'train'):
+                    # print(inputs)
                     outputs = net(inputs)
+                    # print(outputs)
+
+                    labels = np.array(labels).reshape([64,1])
+                    labels = torch.from_numpy(labels.astype(np.float32)).clone()
+                    # print(labels)
+
                     loss = criterion(outputs, labels)
                     _, preds = torch.max(outputs,1)
 
@@ -106,8 +112,11 @@ def train(net, optimizer, criterion, dataloaders_dict):
 
 
 def dataload():
-    with open('../data/label/price.pickle', 'rb') as f:
-        prices = pickle.load(f)
+    with open('../data/label/price_normalize.pickle', 'rb') as f:
+        prices_normalize = pickle.load(f)
+    
+    label_mean_std = prices_normalize['mean_std']
+    prices = prices_normalize['label']
 
     DIR = "../data/fig"
     data = []
@@ -116,7 +125,6 @@ def dataload():
         data.append([f'{DIR}/{num}', num, prices[data_num]])
 
     df = pd.DataFrame(data, columns=['path', 'filename', 'label'])
-
 
     BATCH_SIZE = 64
     SIZE = 400
@@ -145,17 +153,10 @@ def dataload():
 
     dataloaders_dict = {'train': train_dataloader, 'valid': valid_dataloader}
 
-    batch_iterator = iter(dataloaders_dict['train'])
-
-    inputs, labels = next(batch_iterator)
-    print(inputs.size())
-    print(labels)
-
     net = Net()
-    print(net)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.01)
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(net.parameters(), lr=0.001)
     nll_loss = nn.NLLLoss()
 
     train(net, optimizer, criterion, dataloaders_dict)
