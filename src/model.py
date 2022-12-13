@@ -56,7 +56,7 @@ class Net(nn.Module):
 
         self.dropout = nn.Dropout(0.1)
         self.tanh = nn.Tanh()
-
+         
     def forward(self, x):
         x = F.relu(self.conv1_1(x))
         x = F.relu(self.conv1_2(x))
