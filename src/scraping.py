@@ -14,7 +14,7 @@ import sys
 sys.path.append("lib.bs4")
 
 LIMIT_NUM = 100
-SEARCH_PAGE_NUM = 5
+SEARCH_PAGE_NUM = 100
 
 def download_image(url, file_path):
   r = requests.get(url, stream=True)

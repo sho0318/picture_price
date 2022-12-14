@@ -23,5 +23,8 @@ print(max(rm_label))
 print(np.mean(rm_label))
 print(np.std(rm_label))
 
-plt.hist(rm_label,bins=100)
+
+
+label = label[:len(label)//1.5]
+plt.hist(label,bins=100)
 plt.show()
