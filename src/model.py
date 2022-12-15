@@ -72,7 +72,7 @@ class Net(nn.Module):
 
         x = F.relu(x)
         x = self.tanh(x)
-        x = self.fc2(x)
+        x = self.fc2(x) 
         
         return x
 
