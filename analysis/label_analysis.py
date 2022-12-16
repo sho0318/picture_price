@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 
-with open("../data/label/price.pickle", "rb") as f:
-    label = pickle.load(f)
+with open("../data/yahoo_shop/df.pickle", "rb") as f:
+    df = pickle.load(f)
 
-
-print(max(label))
+print(df.head())
+label = list(map(int,df['label']))
 mean = np.mean(label)
 std = np.std(label)
 
@@ -23,8 +23,5 @@ print(max(rm_label))
 print(np.mean(rm_label))
 print(np.std(rm_label))
 
-
-
-label = label[:len(label)//1.5]
 plt.hist(label,bins=100)
 plt.show()
