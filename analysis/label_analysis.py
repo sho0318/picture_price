@@ -6,6 +6,9 @@ with open("../data/yahoo_shop/df.pickle", "rb") as f:
     df = pickle.load(f)
 
 print(df.head())
+src = list(df['src'])
+print(src)
+
 label = list(map(int,df['label']))
 mean = np.mean(label)
 std = np.std(label)
