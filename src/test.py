@@ -4,9 +4,12 @@ import pickle
 import numpy as np
 from PIL import Image
 
-image_path = "../data/reshape_fig/0.jpg"
-image = Image.open(image_path)
 
-image = np.array(image).astype(np.float32).transpose(2,1,0)
-image = image/255
-print(image)
+with open('../data/yahoo_shop/df.pickle', 'rb') as f:
+    df = pickle.load(f)
+
+label = list(df['label'])
+
+print(label)
+with open('../data/yahoo_shop/label.pickle', 'wb') as f:
+    pickle.dump(label, f)

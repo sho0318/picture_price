@@ -15,7 +15,6 @@ from torchvision import datasets, transforms
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print (device)
 
-
 class MyDatasete(Dataset):
     def __init__(self, train_df, input_size, phase='train', transform=None):
         super().__init__()
@@ -30,7 +29,7 @@ class MyDatasete(Dataset):
         return self.len
     
     def __getitem__(self, index):
-        image_path = "../data/reshape_fig/{}.jpg".format(index)
+        image_path = "../data/yahoo_shop/fig/{}.jpg".format(index)
         image = Image.open(image_path)
 
         image = np.array(image).astype(np.float32).transpose(2,1,0)
@@ -96,8 +95,8 @@ def train(net, optimizer, criterion, dataloaders_dict):
                 with torch.set_grad_enabled(phase == 'train'):
                     # print(inputs)
                     outputs = net(inputs)
-                    print(outputs)
-                    print(phase)
+                    # print(outputs)
+                    # print(phase)
 
                     labels = np.array(labels).reshape([len(labels),1])
                     labels = torch.from_numpy(labels.astype(np.float32)).clone()
@@ -118,15 +117,14 @@ def train(net, optimizer, criterion, dataloaders_dict):
         print('-------------------')
 
 
-
 def dataload():
-    with open('../data/label/price_normalize.pickle', 'rb') as f:
+    with open('../data/yahoo_shop/normalize_label.pickle', 'rb') as f:
         prices_normalize = pickle.load(f)
     
     label_mean_std = prices_normalize['mean_std']
     prices = prices_normalize['label']
 
-    DIR = "../data/fig"
+    DIR = "../data/yahoo_shop/fig"
     data = []
     for num in os.listdir(DIR):
         data_num = int(num.split('.')[0])
