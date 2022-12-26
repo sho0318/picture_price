@@ -3,13 +3,9 @@ import pandas as pd
 import pickle
 import numpy as np
 from PIL import Image
+import re
 
+a = "a2,bc1"
+r = re.sub(r'\D', '', a)
 
-with open('../data/yahoo_shop/df.pickle', 'rb') as f:
-    df = pickle.load(f)
-
-label = list(df['label'])
-
-print(label)
-with open('../data/yahoo_shop/label.pickle', 'wb') as f:
-    pickle.dump(label, f)
+print(r)
