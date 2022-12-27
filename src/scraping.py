@@ -10,7 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 sys.path.append("lib.bs4")
 
-SEARCH_PAGE_NUM = 3 # 約50画像 / page
+SEARCH_PAGE_NUM = 250 # 約50画像 / page
 save_data = []
 
 def search_page(driver,url):
@@ -22,7 +22,6 @@ def search_page(driver,url):
   soup = BeautifulSoup(html, "html.parser")
 
   item_preview_tags = soup.find_all("div", class_="item-preview")
-  print(item_preview_tags[3])
 
   for item_preview_tag in item_preview_tags:
     img_src = item_preview_tag.find("img").get("src")
@@ -31,7 +30,7 @@ def search_page(driver,url):
 
     #amountの数字だけ取り出す
     price = re.sub(r'\D', '', amount.text)
-    #amount = '展示中', 'sold'で価格がついていないものはとばす
+    #amount = '展示中', 'sold'で価格がついていない場合は考慮しない
     if len(price) == 0:
       continue
 
