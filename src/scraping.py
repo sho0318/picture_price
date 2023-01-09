@@ -10,11 +10,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 sys.path.append("lib.bs4")
 
-SEARCH_PAGE_NUM = 250 # 約50画像 / page
+SEARCH_PAGE_NUM = 100 # 1ページあたり約50画像
 save_data = []
 
 def search_page(driver,url):
-    # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
+  # すべての要素が読み込まれるまで待つ。タイムアウトは15秒。
   WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located)
 
   driver.get(url)
@@ -26,7 +26,7 @@ def search_page(driver,url):
   for item_preview_tag in item_preview_tags:
     img_src = item_preview_tag.find("img").get("src")
     amount = item_preview_tag.find("span", class_="amount")
-    #amount = <span class="amount">￥20,000 <small> (税込み) </small></span>
+    #eg.) amount = <span class="amount">￥20,000 <small> (税込み) </small></span>
 
     #amountの数字だけ取り出す
     price = re.sub(r'\D', '', amount.text)
@@ -53,6 +53,8 @@ def data_load():
   df = pd.DataFrame(save_data)
   with open('../data/this_is_gallery/df.pickle', 'wb') as f:
     pickle.dump(df, f)
+  
+  print(df)
 
 if __name__ == '__main__':
   data_load()

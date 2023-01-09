@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 import re
 
-a = "a2,bc1"
-r = re.sub(r'\D', '', a)
+with open('../data/this_is_gallery/df.pickle', 'rb') as f:
+    df = pickle.load(f)
 
-print(r)
+print(len(df))
