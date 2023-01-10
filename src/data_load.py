@@ -12,19 +12,32 @@ def download_file(url, dst_path):
             data = web_file.read()
             with open(dst_path, mode='wb') as local_file:
                 local_file.write(data)
-    except urllib.error.URLError as e:
-        print(e)
+        flag = True
+    except:
+        flag = False
+        print(dst_path)
+    return flag
 
 def get_fig_from_url(urls):
     fig_paths = []
+    rm_idx = []
+    cnt = 0
     for i, url in enumerate(urls):
-        path = "../data/this_is_gallery/fig/{}.jpg".format(i)
-        download_file(url, path)
-        fig_paths.append(path)
-    
-    return fig_paths
+        path = "../data/this_is_gallery/fig/{}.jpg".format(cnt)
+        flag = download_file(url, path)
 
-def label_normalize(labels):
+        if flag:
+            fig_paths.append(path)
+            cnt += 1
+        else:
+            rm_idx.append(i)
+    
+    return fig_paths, rm_idx
+
+
+def label_normalize(labels, rm_idx):
+    labels = labels.drop(index=rm_idx)
+
     mean_labels = labels.mean()
     std_labels = labels.std()
 
@@ -38,12 +51,13 @@ def preprocessing_data(df):
     labels = df['price']
     labels = labels.astype(int)
 
-    fig_paths = get_fig_from_url(fig_urls)
-    labels, normalize_para = label_normalize(labels)
+    fig_paths, rm_idx = get_fig_from_url(fig_urls)
+    labels, normalize_para = label_normalize(labels, rm_idx)
 
     paths = pd.DataFrame(fig_paths)
 
-    rt_df = pd.concat([paths, labels], ignore_index=True)
+    rt_df = pd.concat([paths, labels], axis=1, ignore_index=True)
+    rt_df.columns = ['paths','labels']
 
     with open("../data/this_is_gallery/normalize_para.pickle", "wb") as f:
         pickle.dump(normalize_para, f)
