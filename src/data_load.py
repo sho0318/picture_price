@@ -63,3 +63,9 @@ def preprocessing_data(df):
         pickle.dump(normalize_para, f)
 
     return rt_df
+
+if __name__ == '__main__':
+    with open('../data/this_is_gallery/df.pickle', 'rb') as f:
+        df = pickle.load(f)
+
+    rt_df = preprocessing_data(df)
