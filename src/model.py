@@ -23,11 +23,20 @@ TRAINDATA_RATE = 0.8
 EPOCHS = 10
 BATCH_SIZE = 64
 
+
+def get_option():
+    argparser = ArgumentParser()
+    argparser.add_argument('-dlf', '--DownloadFigData', type=bool,
+                           default=False,
+                           help='Whether to download figs from url')
+    return argparser.parse_args()
+
+
 class MyDatasete(Dataset):
     def __init__(self, train_df, input_size, phase='train', transform=None):
         super().__init__()
         self.train_df = train_df
-        image_paths = train_df["path"].to_list()
+        image_paths = train_df["paths"].to_list()
         self.input_size = input_size
         self.len = len(image_paths)
         self.transform = transform
@@ -38,12 +47,16 @@ class MyDatasete(Dataset):
     
     def __getitem__(self, index):
         image_path = "../data/this_is_gallery/fig/{}.jpg".format(index)
-        image = Image.open(image_path)
+        image = Image.open(image_path).convert('RGB')
+
+        if image.size != (300, 300):
+            image = image.resize((300, 300), Image.LANCZOS)
+            # Image.LANCZOSでいい感じに合わせてくれるらしい
 
         image = np.array(image).astype(np.float32).transpose(2,1,0)
         image = image / 255
 
-        label = self.train_df["label"].apply(lambda x: float(x)).to_list()[index]
+        label = self.train_df["labels"].apply(lambda x: float(x)).to_list()[index]
 
         return image, label
 
@@ -58,11 +71,10 @@ class Net(nn.Module):
         self.conv2_1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
         self.conv2_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(in_features=128*100*100, out_features=128)
+        self.fc1 = nn.Linear(in_features=72*100*100, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=1)
 
         self.dropout = nn.Dropout(0.1)
-        self.tanh = nn.Tanh()
          
     def forward(self, x):
         x = F.relu(self.conv1_1(x))
@@ -73,12 +85,11 @@ class Net(nn.Module):
         x = F.relu(self.conv2_2(x))
         x = self.pool2(x)
 
-        x = x.view(-1, 128*100*100)
+        x = x.view(-1, 72*100*100)
         x = self.fc1(x)
         x = self.dropout(x)
 
         x = F.relu(x)
-        x = self.tanh(x)
         x = self.fc2(x) 
         
         return x
@@ -99,15 +110,15 @@ def train(net, optimizer, criterion, dataloaders_dict):
                 inputs = inputs.to(device)
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
-                    # print(inputs)
+                    # print(len(inputs))
                     outputs = net(inputs)
-                    # print(outputs)
+                    # print(len(outputs))
                     # print(phase)
 
                     labels = np.array(labels).reshape([len(labels),1])
                     labels = torch.from_numpy(labels.astype(np.float32)).clone()
                     labels = labels.to(device)
-                    # print(labels)
+                    # print(len(labels))
 
                     loss = criterion(outputs, labels)
 
@@ -123,14 +134,23 @@ def train(net, optimizer, criterion, dataloaders_dict):
         print('-------------------')
 
 
-def dataload():
+def dataload(args):
     with open('../data/this_is_gallery/df.pickle', 'rb') as f:
         df = pickle.load(f)
 
-    df = preprocessing_data(df) 
-    # df.columns = ['paths', 'labels'].  
-    # paths:figのpath
-    # labels:標準化後のprice
+    if args.DownloadFigData:
+        df = preprocessing_data(df) 
+        # df.columns = ['paths', 'labels'].  
+        # paths:figのpath
+        # labels:標準化後のprice
+        with open('../data/this_is_gallery/preprocess_df.pickle', 'wb') as f:
+            pickle.dump(df, f)
+    else:
+        with open('../data/this_is_gallery/preprocess_df.pickle', 'rb') as f:
+            df = pickle.load(f)
+    
+    df = df.dropna()
+    print(df)
 
     image_dataset = MyDatasete(df, (FIG_SIZE, FIG_SIZE))
 
@@ -163,8 +183,8 @@ def dataload():
     return dataloaders_dict
 
 
-def main():
-    dataloaders_dict = dataload()
+def main(args):
+    dataloaders_dict = dataload(args)
 
     net = Net()
     net = net.to(device)
@@ -178,4 +198,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = get_option()
+    main(args)
