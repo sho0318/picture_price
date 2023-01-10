@@ -8,4 +8,10 @@ import re
 with open('../data/this_is_gallery/df.pickle', 'rb') as f:
     df = pickle.load(f)
 
-print(len(df))
+labels = df['price']
+labels = labels.astype(int)
+labels = labels
+tmp = labels.mean() 
+tmp = labels.std()
+print(labels)
+print(tmp)

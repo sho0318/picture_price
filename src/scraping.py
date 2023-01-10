@@ -10,7 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 sys.path.append("lib.bs4")
 
-SEARCH_PAGE_NUM = 100 # 1ページあたり約50画像
+SEARCH_PAGE_MAX = 1000 # 1ページあたり約50画像
+COLLECT_FIG_NUM = 10000
 save_data = []
 
 def search_page(driver,url):
@@ -34,19 +35,31 @@ def search_page(driver,url):
     if len(price) == 0:
       continue
 
-    save_data.append({'src': img_src, 'price': price})
+    # 価格が300,000円を超える場合は外れ値として除外
+    if int(price) >= 300000:
+      continue
+
+    save_data.append({'src': img_src, 'price': int(price)})
 
 def data_load():
   options = webdriver.ChromeOptions()
   options.add_argument('--headless')
   options.add_argument('--no-sandbox')
   options.add_argument('--disable-dev-shm-usage')
+  options.add_argument('--disable-gpu')
   driver = webdriver.Chrome('chromedriver',options=options)
   driver.implicitly_wait(10)
 
-  for page_num in range(SEARCH_PAGE_NUM):
+  
+  for page_num in range(SEARCH_PAGE_MAX):
     url = "https://thisisgallery.com/products/page/{}".format(page_num)
-    search_page(driver=driver,url=url)
+    try:
+      search_page(driver=driver,url=url)
+    except:
+      break
+    
+    if len(save_data) >= COLLECT_FIG_NUM:
+      break
   
   driver.quit()
 
@@ -55,6 +68,7 @@ def data_load():
     pickle.dump(df, f)
   
   print(df)
+  print(len(df))
 
 if __name__ == '__main__':
   data_load()
