@@ -10,9 +10,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from torchvision import datasets, transforms
 
 from data_load import preprocessing_data
+from argparse import ArgumentParser
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print (device)
