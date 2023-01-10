@@ -12,8 +12,16 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
+from data_load import preprocessing_data
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print (device)
+
+FIG_SIZE = 300
+TRAINDATA_RATE = 0.8
+
+EPOCHS = 10
+BATCH_SIZE = 64
 
 class MyDatasete(Dataset):
     def __init__(self, train_df, input_size, phase='train', transform=None):
@@ -29,7 +37,7 @@ class MyDatasete(Dataset):
         return self.len
     
     def __getitem__(self, index):
-        image_path = "../data/yahoo_shop/fig/{}.jpg".format(index)
+        image_path = "../data/this_is_gallery/fig/{}.jpg".format(index)
         image = Image.open(image_path)
 
         image = np.array(image).astype(np.float32).transpose(2,1,0)
@@ -75,8 +83,8 @@ class Net(nn.Module):
         
         return x
 
+
 def train(net, optimizer, criterion, dataloaders_dict):
-    EPOCHS = 5
     for epoch in range(EPOCHS):
         print('Epoch {}/{}'.format(epoch+1, EPOCHS))
 
@@ -87,8 +95,6 @@ def train(net, optimizer, criterion, dataloaders_dict):
                 net.eval()
         
             epoch_loss = 0.0
-            epoch_corrects = 0
-
             for inputs, labels in dataloaders_dict[phase]:
                 inputs = inputs.to(device)
                 optimizer.zero_grad()
@@ -118,27 +124,19 @@ def train(net, optimizer, criterion, dataloaders_dict):
 
 
 def dataload():
-    with open('../data/yahoo_shop/normalize_label.pickle', 'rb') as f:
-        prices_normalize = pickle.load(f)
-    
-    label_mean_std = prices_normalize['mean_std']
-    prices = prices_normalize['label']
+    with open('../data/this_is_gallery/df.pickle', 'rb') as f:
+        df = pickle.load(f)
 
-    DIR = "../data/yahoo_shop/fig"
-    data = []
-    for num in os.listdir(DIR):
-        data_num = int(num.split('.')[0])
-        data.append([f'{DIR}/{num}', num, prices[data_num]])
+    df = preprocessing_data(df) 
+    # df.columns = ['paths', 'labels'].  
+    # paths:figのpath
+    # labels:標準化後のprice
 
-    df = pd.DataFrame(data, columns=['path', 'filename', 'label'])
+    image_dataset = MyDatasete(df, (FIG_SIZE, FIG_SIZE))
 
-    BATCH_SIZE = 64
-    SIZE = 400
-    TRAINDATA_RATE = 0.8
-
-    image_dataset = MyDatasete(df, (SIZE, SIZE))
-
-    train_dataset, valid_dataset = torch.utils.data.random_split(image_dataset, [int(len(image_dataset)*TRAINDATA_RATE), len(image_dataset)-int(len(image_dataset)*TRAINDATA_RATE)])
+    train_dataset, valid_dataset = torch.utils.data.random_split(image_dataset, 
+                                                                 [int(len(image_dataset)*TRAINDATA_RATE), 
+                                                                 len(image_dataset)-int(len(image_dataset)*TRAINDATA_RATE)])
 
     train_dataloader = DataLoader(
         train_dataset,
@@ -149,31 +147,35 @@ def dataload():
         pin_memory = True
     )
 
-    # valid_dataloader = DataLoader(
-    #     valid_dataset,
-    #     batch_size = BATCH_SIZE,
-    #     shuffle = True,
-    #     num_workers = 2,
-    #     drop_last = True,
-    #     pin_memory = True
-    # )
+    valid_dataloader = DataLoader(
+        valid_dataset,
+        batch_size = BATCH_SIZE,
+        shuffle = True,
+        num_workers = 2,
+        drop_last = True,
+        pin_memory = True
+    )
 
-    valid_dataloader = DataLoader(valid_dataset, batch_size=32, shuffle=False)
-
+    # valid_dataloader = DataLoader(valid_dataset, batch_size=32, shuffle=False)
 
     dataloaders_dict = {'train': train_dataloader, 'valid': valid_dataloader}
+
+    return dataloaders_dict
+
+
+def main():
+    dataloaders_dict = dataload()
 
     net = Net()
     net = net.to(device)
 
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters(), lr=0.001)
-    nll_loss = nn.NLLLoss()
+    # nll_loss = nn.NLLLoss()
 
     train(net, optimizer, criterion, dataloaders_dict)
     torch.save(net.state_dict(), "export_model.pth")
 
 
-
 if __name__ == "__main__":
-    dataload()
+    main()
