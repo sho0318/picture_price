@@ -2,14 +2,12 @@ import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 
-with open("../data/yahoo_shop/df.pickle", "rb") as f:
+with open("../data/this_is_gallery/df.pickle", "rb") as f:
     df = pickle.load(f)
 
 print(df.head())
-src = list(df['src'])
-print(src)
 
-label = list(map(int,df['label']))
+label = list(map(int,df['price']))
 mean = np.mean(label)
 std = np.std(label)
 
@@ -17,7 +15,7 @@ label.sort()
 rm_label = []
 
 for tmp in label:
-    if tmp >= mean + std*3:
+    if tmp >= 200000:
         break
     else:
         rm_label.append(tmp)
@@ -25,6 +23,7 @@ for tmp in label:
 print(max(rm_label))
 print(np.mean(rm_label))
 print(np.std(rm_label))
+print(len(rm_label))
 
-plt.hist(label,bins=100)
+plt.hist(rm_label,bins=100)
 plt.show()
