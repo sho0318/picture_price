@@ -59,6 +59,9 @@ def preprocessing_data(df):
 
     paths = pd.DataFrame(fig_paths)
 
+    paths = paths.reset_index(drop=True)
+    labels = labels.reset_index(drop=True)
+
     rt_df = pd.concat([paths, labels], axis=1, ignore_index=True)
     rt_df.columns = ['paths','labels']
 
@@ -72,6 +75,7 @@ if __name__ == '__main__':
         df = pickle.load(f)
 
     rt_df = preprocessing_data(df)
+    print(rt_df)
     
     with open('../data/this_is_gallery/preprocess_df.pickle', 'wb') as f:
-            pickle.dump(rt_df, f)
+        pickle.dump(rt_df, f)

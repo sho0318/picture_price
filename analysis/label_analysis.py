@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 
-with open("../data/this_is_gallery/df.pickle", "rb") as f:
+with open("../data/this_is_gallery/preprocess_df.pickle", "rb") as f:
     df = pickle.load(f)
 
 print(df.head())
 
-label = list(map(int,df['price']))
+label = list(map(int,df['labels']))
 mean = np.mean(label)
 std = np.std(label)
 

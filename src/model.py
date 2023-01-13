@@ -18,10 +18,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print (device)
 
 FIG_SIZE = 300
-TRAINDATA_RATE = 0.8
+TRAINDATA_RATE = 0.7
 
 EPOCHS = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 
 
 def get_option():
@@ -36,9 +36,9 @@ class MyDatasete(Dataset):
     def __init__(self, train_df, input_size, phase='train', transform=None):
         super().__init__()
         self.train_df = train_df
-        image_paths = train_df["paths"].to_list()
+        self.image_paths = train_df["paths"].to_list()
         self.input_size = input_size
-        self.len = len(image_paths)
+        self.len = len(self.image_paths)
         self.transform = transform
         self.phase = phase
     
@@ -46,7 +46,7 @@ class MyDatasete(Dataset):
         return self.len
     
     def __getitem__(self, index):
-        image_path = "../data/this_is_gallery/fig/{}.jpg".format(index)
+        image_path = self.image_paths[index]
         image = Image.open(image_path).convert('RGB')
 
         if image.size != (300, 300):
@@ -106,7 +106,7 @@ def train(net, optimizer, criterion, dataloaders_dict):
                 net.eval()
         
             epoch_loss = 0.0
-            for inputs, labels in dataloaders_dict[phase]:
+            for i, [inputs, labels] in enumerate(dataloaders_dict[phase]):
                 inputs = inputs.to(device)
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
@@ -121,6 +121,8 @@ def train(net, optimizer, criterion, dataloaders_dict):
                     # print(len(labels))
 
                     loss = criterion(outputs, labels)
+                    # if i % 10:
+                    #     print(i, '回:', loss)
 
                 if phase == 'train':
                     loss.backward()
@@ -135,10 +137,11 @@ def train(net, optimizer, criterion, dataloaders_dict):
 
 
 def dataload(args):
-    with open('../data/this_is_gallery/df.pickle', 'rb') as f:
-        df = pickle.load(f)
 
     if args.DownloadFigData:
+        with open('../data/this_is_gallery/df.pickle', 'rb') as f:
+            df = pickle.load(f)
+
         df = preprocessing_data(df) 
         # df.columns = ['paths', 'labels'].  
         # paths:figのpath
@@ -190,7 +193,7 @@ def main(args):
     net = net.to(device)
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(net.parameters(), lr=0.001)
+    optimizer = optim.Adam(net.parameters(), lr=0.05)
     # nll_loss = nn.NLLLoss()
 
     train(net, optimizer, criterion, dataloaders_dict)
