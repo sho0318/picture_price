@@ -32,11 +32,14 @@ def get_fig_from_url(urls):
         else:
             rm_idx.append(i)
     
+    print(len(fig_paths))
+    
     return fig_paths, rm_idx
 
 
 def label_normalize(labels, rm_idx):
     labels = labels.drop(index=rm_idx)
+    print(len(labels))
 
     mean_labels = labels.mean()
     std_labels = labels.std()
@@ -69,3 +72,6 @@ if __name__ == '__main__':
         df = pickle.load(f)
 
     rt_df = preprocessing_data(df)
+    
+    with open('../data/this_is_gallery/preprocess_df.pickle', 'wb') as f:
+            pickle.dump(rt_df, f)

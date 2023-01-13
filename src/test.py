@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 import re
 
-with open('../data/this_is_gallery/df.pickle', 'rb') as f:
+with open('../data/this_is_gallery/preprocess_df.pickle', 'rb') as f:
     df = pickle.load(f)
 
-print(list(df['src'])[:10])
+print(df)
