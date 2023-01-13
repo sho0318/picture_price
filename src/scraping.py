@@ -35,8 +35,8 @@ def search_page(driver,url):
     if len(price) == 0:
       continue
 
-    # 価格が300,000円を超える場合は外れ値として除外
-    if int(price) >= 300000:
+    # 価格が100,000円を超える場合は外れ値として除外
+    if int(price) >= 100000:
       continue
 
     save_data.append({'src': img_src, 'price': int(price)})
