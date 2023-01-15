@@ -20,7 +20,7 @@ print (device)
 FIG_SIZE = 300
 TRAINDATA_RATE = 0.7
 
-EPOCHS = 20
+EPOCHS = 1
 BATCH_SIZE = 128
 
 
@@ -74,14 +74,16 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(in_features=72*100*100, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=1)
 
+        self.Leaky = nn.LeakyReLU(0.1)
+
         self.dropout = nn.Dropout(0.1)
          
     def forward(self, x):
-        x = F.tanhshrink(self.conv1_1(x))
+        x = F.relu(self.conv1_1(x))
         # x = F.relu(self.conv1_2(x))
         x = self.pool1(x)
 
-        x = F.tanhshrink(self.conv2_1(x))
+        x = F.relu(self.conv2_1(x))
         # x = F.relu(self.conv2_2(x))
         x = self.pool2(x)
 
@@ -89,8 +91,9 @@ class Net(nn.Module):
         x = self.fc1(x)
         # x = self.dropout(x)
 
-        # x = F.relu(x)
         x = self.fc2(x) 
+        x = F.relu(x)
+        
         
         return x
 
