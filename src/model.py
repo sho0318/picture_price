@@ -20,7 +20,7 @@ print (device)
 FIG_SIZE = 300
 TRAINDATA_RATE = 0.7
 
-EPOCHS = 10
+EPOCHS = 1
 BATCH_SIZE = 128
 
 
@@ -74,23 +74,26 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(in_features=72*100*100, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=1)
 
+        self.Leaky = nn.LeakyReLU(0.1)
+
         self.dropout = nn.Dropout(0.1)
          
     def forward(self, x):
         x = F.relu(self.conv1_1(x))
-        x = F.relu(self.conv1_2(x))
+        # x = F.relu(self.conv1_2(x))
         x = self.pool1(x)
 
         x = F.relu(self.conv2_1(x))
-        x = F.relu(self.conv2_2(x))
+        # x = F.relu(self.conv2_2(x))
         x = self.pool2(x)
 
         x = x.view(-1, 72*100*100)
         x = self.fc1(x)
-        x = self.dropout(x)
+        # x = self.dropout(x)
 
-        x = F.relu(x)
         x = self.fc2(x) 
+        x = F.relu(x)
+        
         
         return x
 
@@ -193,7 +196,7 @@ def main(args):
     net = net.to(device)
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(net.parameters(), lr=0.05)
+    optimizer = optim.Adam(net.parameters(), lr=0.01)
     # nll_loss = nn.NLLLoss()
 
     train(net, optimizer, criterion, dataloaders_dict)
