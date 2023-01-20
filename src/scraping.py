@@ -10,8 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 sys.path.append("lib.bs4")
 
-SEARCH_PAGE_MAX = 1000 # 1ページあたり約50画像
-COLLECT_FIG_NUM = 10000
+SEARCH_PAGE_MAX = 5000 # 1ページあたり約50画像
+COLLECT_FIG_NUM = 50000
 save_data = []
 
 def search_page(driver,url):
@@ -60,6 +60,9 @@ def data_load():
     
     if len(save_data) >= COLLECT_FIG_NUM:
       break
+      
+    if len(save_data)%1000 == 0:
+      print('save_data len: {}'.format(len(save_data))) 
   
   driver.quit()
 
